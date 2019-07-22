@@ -1,23 +1,31 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WishList.Data;
+using WishList.Models;
 
 namespace WishList.Controllers
 {
+    [Authorize]
     public class ItemController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ItemController(ApplicationDbContext context)
+        public ItemController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            this._context = context;
+            this._userManager = userManager;
         }
 
         public IActionResult Index()
         {
-            var model = _context.Items.ToList();
+            ApplicationUser applicationUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            List<Item> items = _context.Items.Where(i => i.User.Id == applicationUser.Id).ToList();
 
-            return View("Index", model);
+            return View("Index", items);
         }
 
         [HttpGet]
@@ -27,8 +35,10 @@ namespace WishList.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Models.Item item)
+        public IActionResult Create(Item item)
         {
+            ApplicationUser applicationUser = _userManager.GetUserAsync(HttpContext.User).Result;
+            item.User = applicationUser;
             _context.Items.Add(item);
             _context.SaveChanges();
             return RedirectToAction("Index");
@@ -36,7 +46,14 @@ namespace WishList.Controllers
 
         public IActionResult Delete(int id)
         {
+            ApplicationUser applicationUser = _userManager.GetUserAsync(HttpContext.User).Result;
             var item = _context.Items.FirstOrDefault(e => e.Id == id);
+
+            if (applicationUser != item.User)
+            {
+                return Unauthorized();
+            }
+
             _context.Items.Remove(item);
             _context.SaveChanges();
             return RedirectToAction("Index");
