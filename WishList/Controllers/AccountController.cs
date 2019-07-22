@@ -66,7 +66,7 @@ namespace WishList.Controllers
                 return View(loginViewModel);
             }
 
-            Microsoft.AspNetCore.Identity.SignInResult signInResult = _signInManager.PasswordSignInAsync(new ApplicationUser() { Email = loginViewModel.Email, UserName = loginViewModel.Email }, loginViewModel.Password, false, false).Result;
+            Microsoft.AspNetCore.Identity.SignInResult signInResult = _signInManager.PasswordSignInAsync(loginViewModel.Email, loginViewModel.Password, false, false).Result;
 
             if (!signInResult.Succeeded)
             {
