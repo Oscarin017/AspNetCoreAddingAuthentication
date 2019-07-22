@@ -74,7 +74,7 @@ namespace WishList.Controllers
                 return View(loginViewModel);
             }
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Item");
         }
 
         [HttpPost]
